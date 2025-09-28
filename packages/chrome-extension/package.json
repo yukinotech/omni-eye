@@ -2,10 +2,9 @@
   "name": "@omni-eye/chrome-extension",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && node ./scripts/copy-public.mjs",
-    "dev": "node ./scripts/dev.mjs",
+    "build": "node ./scripts/clean.mjs && tsc -p tsconfig.json",
+    "dev": "node ./scripts/clean.mjs && tsc -p tsconfig.json --watch",
     "lint": "echo \"No lint configured for chrome extension yet\"",
     "test": "echo \"No tests for chrome extension yet\""
   },
