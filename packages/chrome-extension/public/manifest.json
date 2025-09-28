@@ -3,18 +3,11 @@
   "name": "Omni Eye",
   "version": "0.1.0",
   "description": "AI-assisted change detection for the browser",
-  "permissions": [
-    "storage",
-    "scripting",
-    "activeTab",
-    "tabs"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "permissions": ["storage", "scripting", "activeTab", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
-  ],
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

@@ -7,8 +7,8 @@ import {
   Screenshot,
   ScreenshotDiffResult,
   ScreenshotOptions,
-  Snapshot
-} from "./shared/messages.js";
+  Snapshot,
+} from "./shared/messages";
 
 const snapshots = new Map<string, Snapshot>();
 const BRIDGE_URL = "ws://localhost:7337";
@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   void handleMessage(message, sender).then(
     (response) => sendResponse(response),
-    (error) => sendResponse(createErrorResponse("unknown", error))
+    (error) => sendResponse(createErrorResponse("unknown", error)),
   );
 
   return true;
@@ -43,13 +43,16 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
   void handleAgentCommand(message).then(
     (response) => sendResponse(response),
-    (error) => sendResponse(createErrorResponse(message.requestId, error))
+    (error) => sendResponse(createErrorResponse(message.requestId, error)),
   );
 
   return true;
 });
 
-async function handleMessage(message: AgentCommand | ContentResponse, sender: chrome.runtime.MessageSender) {
+async function handleMessage(
+  message: AgentCommand | ContentResponse,
+  sender: chrome.runtime.MessageSender,
+) {
   if (isAgentCommand(message)) {
     return handleAgentCommand(message, sender);
   }
@@ -57,7 +60,10 @@ async function handleMessage(message: AgentCommand | ContentResponse, sender: ch
   return { ok: false };
 }
 
-async function handleAgentCommand(command: AgentCommand, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleAgentCommand(
+  command: AgentCommand,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   await ensureBridge();
 
   try {
@@ -74,10 +80,10 @@ async function handleAgentCommand(command: AgentCommand, sender?: chrome.runtime
         return await handleScreenshotCommand(command, sender);
       case "agent:dom":
         return await handleDomCommand(command, sender);
-    default: {
-      const fallback = command as AgentCommand;
-      return createErrorResponse(fallback.requestId, `Unsupported command ${fallback.kind}`);
-    }
+      default: {
+        const fallback = command as AgentCommand;
+        return createErrorResponse(fallback.requestId, `Unsupported command ${fallback.kind}`);
+      }
     }
   } catch (error) {
     console.error("[omni-eye] command failed", command.kind, error);
@@ -85,26 +91,35 @@ async function handleAgentCommand(command: AgentCommand, sender?: chrome.runtime
   }
 }
 
-async function handleCaptureCommand(command: Extract<AgentCommand, { kind: "agent:capture" }>, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleCaptureCommand(
+  command: Extract<AgentCommand, { kind: "agent:capture" }>,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   const tabId = await resolveTabId(command.tabId ?? sender?.tab?.id);
   const snapshot = await captureTabSnapshot(tabId, {
     includeScreenshot: command.includeScreenshot ?? true,
     store: command.storeSnapshot ?? true,
-    requestId: command.requestId
+    requestId: command.requestId,
   });
 
   return {
     kind: "agent:capture:result",
     requestId: command.requestId,
-    snapshot
+    snapshot,
   };
 }
 
-async function handleDiffCommand(command: Extract<AgentCommand, { kind: "agent:diff" }>): Promise<AgentResponse> {
+async function handleDiffCommand(
+  command: Extract<AgentCommand, { kind: "agent:diff" }>,
+): Promise<AgentResponse> {
   const baseline = snapshots.get(command.baselineId);
 
   if (!baseline) {
-    return createErrorResponse(command.requestId, `Unknown baseline snapshot ${command.baselineId}`, "baseline_not_found");
+    return createErrorResponse(
+      command.requestId,
+      `Unknown baseline snapshot ${command.baselineId}`,
+      "baseline_not_found",
+    );
   }
 
   let candidateHtml = command.candidateHtml;
@@ -113,7 +128,11 @@ async function handleDiffCommand(command: Extract<AgentCommand, { kind: "agent:d
   if (command.candidateSnapshotId) {
     const candidateSnapshot = snapshots.get(command.candidateSnapshotId);
     if (!candidateSnapshot) {
-      return createErrorResponse(command.requestId, `Unknown candidate snapshot ${command.candidateSnapshotId}`, "candidate_not_found");
+      return createErrorResponse(
+        command.requestId,
+        `Unknown candidate snapshot ${command.candidateSnapshotId}`,
+        "candidate_not_found",
+      );
     }
 
     if (!candidateHtml) {
@@ -126,7 +145,11 @@ async function handleDiffCommand(command: Extract<AgentCommand, { kind: "agent:d
   }
 
   if (!candidateHtml) {
-    return createErrorResponse(command.requestId, "candidateHtml or candidateSnapshotId is required", "missing_candidate_html");
+    return createErrorResponse(
+      command.requestId,
+      "candidateHtml or candidateSnapshotId is required",
+      "missing_candidate_html",
+    );
   }
 
   const htmlDiff = diffHtml(baseline.html, candidateHtml);
@@ -141,15 +164,18 @@ async function handleDiffCommand(command: Extract<AgentCommand, { kind: "agent:d
     requestId: command.requestId,
     baselineId: command.baselineId,
     htmlDiff,
-    screenshotDiff
+    screenshotDiff,
   };
 }
 
-async function handleNavigateCommand(command: Extract<AgentCommand, { kind: "agent:navigate" }>, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleNavigateCommand(
+  command: Extract<AgentCommand, { kind: "agent:navigate" }>,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   const preferredTabId = command.tabId ?? sender?.tab?.id;
   const tabId = await openOrUpdateTab(command.url, {
     newTab: command.newTab,
-    preferredTabId
+    preferredTabId,
   });
 
   await waitForTabComplete(tabId, command.timeoutMs ?? 20_000);
@@ -158,11 +184,15 @@ async function handleNavigateCommand(command: Extract<AgentCommand, { kind: "age
     const waitResponse = await sendContentRequest(tabId, {
       kind: "content:wait",
       requestId: `${command.requestId}::wait`,
-      condition: command.waitFor
+      condition: command.waitFor,
     });
 
     if (waitResponse.kind === "content:wait:result" && !waitResponse.satisfied) {
-      return createErrorResponse(command.requestId, "Wait condition not satisfied before timeout", "wait_timeout");
+      return createErrorResponse(
+        command.requestId,
+        "Wait condition not satisfied before timeout",
+        "wait_timeout",
+      );
     }
 
     if (waitResponse.kind === "content:error") {
@@ -177,19 +207,22 @@ async function handleNavigateCommand(command: Extract<AgentCommand, { kind: "age
     requestId: command.requestId,
     tabId,
     url: tab.url ?? command.url,
-    title: tab.title ?? undefined
+    title: tab.title ?? undefined,
   };
 }
 
-async function handleActionsCommand(command: Extract<AgentCommand, { kind: "agent:actions" }>, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleActionsCommand(
+  command: Extract<AgentCommand, { kind: "agent:actions" }>,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   const tabId = await resolveTabId(command.tabId ?? sender?.tab?.id);
   const response = await sendContentRequest(tabId, {
     kind: "content:actions",
     requestId: command.requestId,
     actions: command.actions,
     options: {
-      captureSnapshot: command.options?.captureSnapshot ?? false
-    }
+      captureSnapshot: command.options?.captureSnapshot ?? false,
+    },
   });
 
   if (response.kind === "content:error") {
@@ -197,16 +230,25 @@ async function handleActionsCommand(command: Extract<AgentCommand, { kind: "agen
   }
 
   if (response.kind !== "content:actions:result") {
-    return createErrorResponse(command.requestId, "Unexpected content action response", "unexpected_response");
+    return createErrorResponse(
+      command.requestId,
+      "Unexpected content action response",
+      "unexpected_response",
+    );
   }
 
   let snapshot = response.snapshot;
 
-  if (!snapshot && (command.options?.captureSnapshot || command.options?.captureScreenshot || command.options?.storeSnapshot)) {
+  if (
+    !snapshot &&
+    (command.options?.captureSnapshot ||
+      command.options?.captureScreenshot ||
+      command.options?.storeSnapshot)
+  ) {
     snapshot = await captureTabSnapshot(tabId, {
       includeScreenshot: command.options?.captureScreenshot ?? false,
       store: false,
-      requestId: `${command.requestId}::post-actions`
+      requestId: `${command.requestId}::post-actions`,
     });
   }
 
@@ -224,27 +266,33 @@ async function handleActionsCommand(command: Extract<AgentCommand, { kind: "agen
     requestId: command.requestId,
     results: response.results,
     snapshot,
-    screenshot: snapshot?.screenshot
+    screenshot: snapshot?.screenshot,
   };
 }
 
-async function handleScreenshotCommand(command: Extract<AgentCommand, { kind: "agent:screenshot" }>, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleScreenshotCommand(
+  command: Extract<AgentCommand, { kind: "agent:screenshot" }>,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   const tabId = await resolveTabId(command.tabId ?? sender?.tab?.id);
   const screenshot = await captureScreenshotForTab(tabId, command.options);
 
   return {
     kind: "agent:screenshot:result",
     requestId: command.requestId,
-    screenshot
+    screenshot,
   };
 }
 
-async function handleDomCommand(command: Extract<AgentCommand, { kind: "agent:dom" }>, sender?: chrome.runtime.MessageSender): Promise<AgentResponse> {
+async function handleDomCommand(
+  command: Extract<AgentCommand, { kind: "agent:dom" }>,
+  sender?: chrome.runtime.MessageSender,
+): Promise<AgentResponse> {
   const tabId = await resolveTabId(command.tabId ?? sender?.tab?.id);
   const response = await sendContentRequest(tabId, {
     kind: "content:extract",
     requestId: command.requestId,
-    extraction: command.extraction
+    extraction: command.extraction,
   });
 
   if (response.kind === "content:error") {
@@ -252,24 +300,32 @@ async function handleDomCommand(command: Extract<AgentCommand, { kind: "agent:do
   }
 
   if (response.kind !== "content:extract:result") {
-    return createErrorResponse(command.requestId, "Unexpected DOM extraction response", "unexpected_response");
+    return createErrorResponse(
+      command.requestId,
+      "Unexpected DOM extraction response",
+      "unexpected_response",
+    );
   }
 
   return {
     kind: "agent:dom:result",
     requestId: command.requestId,
-    extraction: response.extraction
+    extraction: response.extraction,
   };
 }
 
 async function captureTabSnapshot(
   tabId: number,
-  options: { includeScreenshot?: boolean; store?: boolean; requestId?: string } = {}
+  options: {
+    includeScreenshot?: boolean;
+    store?: boolean;
+    requestId?: string;
+  } = {},
 ): Promise<Snapshot> {
   const requestId = options.requestId ?? createInternalRequestId("capture");
   const response = await sendContentRequest(tabId, {
     kind: "content:capture",
-    requestId
+    requestId,
   });
 
   if (response.kind === "content:error") {
@@ -298,11 +354,14 @@ function storeSnapshot(snapshot: Snapshot): void {
   snapshots.set(snapshot.id, snapshot);
   notifyBridge({
     type: "snapshot",
-    payload: snapshot
+    payload: snapshot,
   });
 }
 
-async function openOrUpdateTab(url: string, options: { newTab?: boolean; preferredTabId?: number | undefined }): Promise<number> {
+async function openOrUpdateTab(
+  url: string,
+  options: { newTab?: boolean; preferredTabId?: number | undefined },
+): Promise<number> {
   if (options.newTab) {
     const createdTab = await chrome.tabs.create({ url, active: true });
     if (createdTab.id === undefined) {
@@ -322,7 +381,10 @@ async function resolveTabId(preferredTabId?: number): Promise<number> {
     return preferredTabId;
   }
 
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const [activeTab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
 
   if (!activeTab?.id) {
     throw new Error("No active tab available");
@@ -359,7 +421,11 @@ async function waitForTabComplete(tabId: number, timeoutMs: number): Promise<voi
   });
 }
 
-async function captureScreenshotForTab(tabId: number, options?: ScreenshotOptions, viewport?: Snapshot["viewport"]): Promise<Screenshot> {
+async function captureScreenshotForTab(
+  tabId: number,
+  options?: ScreenshotOptions,
+  viewport?: Snapshot["viewport"],
+): Promise<Screenshot> {
   const tab = await chrome.tabs.get(tabId);
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
   const format = options?.format ?? "png";
@@ -395,14 +461,17 @@ async function captureScreenshotForTab(tabId: number, options?: ScreenshotOption
     format,
     dataUrl,
     width,
-    height
+    height,
   };
 }
 
-async function diffScreenshots(baseline: Screenshot, candidate: Screenshot): Promise<ScreenshotDiffResult> {
+async function diffScreenshots(
+  baseline: Screenshot,
+  candidate: Screenshot,
+): Promise<ScreenshotDiffResult> {
   const [baselineBitmap, candidateBitmap] = await Promise.all([
     createImageBitmap(await blobFromDataUrl(baseline.dataUrl)),
-    createImageBitmap(await blobFromDataUrl(candidate.dataUrl))
+    createImageBitmap(await blobFromDataUrl(candidate.dataUrl)),
   ]);
 
   const width = Math.max(baselineBitmap.width, candidateBitmap.width);
@@ -415,7 +484,7 @@ async function diffScreenshots(baseline: Screenshot, candidate: Screenshot): Pro
     return {
       totalPixels,
       differingPixels: 0,
-      mismatchRatio: 0
+      mismatchRatio: 0,
     };
   }
 
@@ -473,8 +542,8 @@ async function diffScreenshots(baseline: Screenshot, candidate: Screenshot): Pro
       format: "png",
       dataUrl: diffDataUrl,
       width,
-      height
-    }
+      height,
+    },
   };
 }
 
@@ -483,24 +552,27 @@ function diffHtml(baseline: string, candidate: string): DiffBlock[] {
     return [
       {
         type: "unchanged",
-        value: "No differences detected"
-      }
+        value: "No differences detected",
+      },
     ];
   }
 
   return [
     {
       type: "removed",
-      value: baseline.substring(0, Math.min(baseline.length, 5000))
+      value: baseline.substring(0, Math.min(baseline.length, 5000)),
     },
     {
       type: "added",
-      value: candidate.substring(0, Math.min(candidate.length, 5000))
-    }
+      value: candidate.substring(0, Math.min(candidate.length, 5000)),
+    },
   ];
 }
 
-async function sendContentRequest(tabId: number, payload: ContentRequest): Promise<ContentResponse> {
+async function sendContentRequest(
+  tabId: number,
+  payload: ContentRequest,
+): Promise<ContentResponse> {
   await ensureContentScript(tabId);
 
   return new Promise<ContentResponse>((resolve, reject) => {
@@ -524,7 +596,7 @@ async function ensureContentScript(tabId: number): Promise<void> {
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ["content.js"]
+      files: ["content.js"],
     });
   } catch (error) {
     if (!isKnownInjectionError(error)) {
@@ -538,11 +610,17 @@ function isKnownInjectionError(error: unknown): boolean {
     return false;
   }
 
-  return error.message.includes("Cannot access a chrome:// URL") || error.message.includes("Cannot access contents");
+  return (
+    error.message.includes("Cannot access a chrome:// URL") ||
+    error.message.includes("Cannot access contents")
+  );
 }
 
 async function ensureBridge(): Promise<void> {
-  if (bridge && (bridge.readyState === WebSocket.OPEN || bridge.readyState === WebSocket.CONNECTING)) {
+  if (
+    bridge &&
+    (bridge.readyState === WebSocket.OPEN || bridge.readyState === WebSocket.CONNECTING)
+  ) {
     return;
   }
 
@@ -553,8 +631,11 @@ async function ensureBridge(): Promise<void> {
     socket.send(
       JSON.stringify({
         type: "hello",
-        payload: { source: "extension", version: chrome.runtime.getManifest().version }
-      })
+        payload: {
+          source: "extension",
+          version: chrome.runtime.getManifest().version,
+        },
+      }),
     );
   });
 
@@ -596,7 +677,7 @@ function isAgentCommand(message: unknown): message is AgentCommand {
       typeof message === "object" &&
       "kind" in message &&
       typeof (message as { kind: unknown }).kind === "string" &&
-      (message as { kind: string }).kind.startsWith("agent:")
+      (message as { kind: string }).kind.startsWith("agent:"),
   );
 }
 
@@ -619,7 +700,7 @@ function createErrorResponse(requestId: string, error: unknown, code?: string): 
     kind: "agent:error",
     requestId,
     message,
-    code
+    code,
   };
 }
 

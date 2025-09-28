@@ -5,7 +5,7 @@ import {
   normaliseAction,
   normaliseSelector,
   parseActionsFromPrompt,
-  type PromptParseResult
+  type PromptParseResult,
 } from "./prompt-parser.js";
 import type { ElementSelector, PageAction, WaitCondition } from "./messages.js";
 
@@ -20,7 +20,7 @@ async function start(): Promise<void> {
     console.log("[omni-eye:mcp] snapshot received", {
       id: snapshot.id,
       url: snapshot.url,
-      title: snapshot.title
+      title: snapshot.title,
     });
   });
 
@@ -32,7 +32,7 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
     const sdk = await import("@modelcontextprotocol/sdk");
     const server = new sdk.Server({
       name: "omni-eye",
-      version: "0.1.0"
+      version: "0.1.0",
     });
 
     const client = new OmniEyeClient(bridge);
@@ -50,9 +50,9 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
             tabId: { type: "number" },
             newTab: { type: "boolean" },
             waitFor: waitConditionSchema,
-            timeoutMs: { type: "number" }
-          }
-        }
+            timeoutMs: { type: "number" },
+          },
+        },
       },
       async (input: Partial<NavigateParams> & { url: string }) => {
         const waitFor = normalizeWaitConditionInput(input.waitFor);
@@ -61,11 +61,11 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
           tabId: input.tabId,
           newTab: input.newTab,
           waitFor,
-          timeoutMs: input.timeoutMs
+          timeoutMs: input.timeoutMs,
         });
 
         return { type: "json", value: result };
-      }
+      },
     );
 
     server.tool(
@@ -78,20 +78,20 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
             tabId: { type: "number" },
             includeScreenshot: { type: "boolean" },
             storeSnapshot: { type: "boolean" },
-            requestId: { type: "string" }
-          }
-        }
+            requestId: { type: "string" },
+          },
+        },
       },
       async (input: CaptureParams) => {
         const snapshot = await client.capture({
           tabId: input.tabId,
           includeScreenshot: input.includeScreenshot,
           storeSnapshot: input.storeSnapshot,
-          requestId: input.requestId
+          requestId: input.requestId,
         });
 
         return { type: "json", value: snapshot };
-      }
+      },
     );
 
     server.tool(
@@ -105,13 +105,13 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
             prompt: { type: "string" },
             actions: {
               type: "array",
-              items: actionSchema
+              items: actionSchema,
             },
             captureSnapshot: { type: "boolean" },
             captureScreenshot: { type: "boolean" },
-            storeSnapshot: { type: "boolean" }
-          }
-        }
+            storeSnapshot: { type: "boolean" },
+          },
+        },
       },
       async (input: PerformActionsInput) => {
         const diagnostics: string[] = [];
@@ -145,8 +145,8 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
           options: {
             captureSnapshot: input.captureSnapshot,
             captureScreenshot: input.captureScreenshot,
-            storeSnapshot: input.storeSnapshot
-          }
+            storeSnapshot: input.storeSnapshot,
+          },
         });
 
         return {
@@ -155,16 +155,17 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
             results: response.results,
             snapshot: response.snapshot,
             screenshot: response.screenshot,
-            diagnostics
-          }
+            diagnostics,
+          },
         };
-      }
+      },
     );
 
     server.tool(
       "extract_dom",
       {
-        description: "Extract DOM information such as HTML, text, and attributes from the active tab",
+        description:
+          "Extract DOM information such as HTML, text, and attributes from the active tab",
         inputSchema: {
           type: "object",
           properties: {
@@ -174,9 +175,9 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
             includeText: { type: "boolean" },
             includeAttributes: { type: "boolean" },
             includeComputedStyles: { type: "boolean" },
-            maxElements: { type: "number" }
-          }
-        }
+            maxElements: { type: "number" },
+          },
+        },
       },
       async (input: { tabId?: number } & Record<string, unknown>) => {
         const extraction = {
@@ -185,16 +186,16 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
           includeText: input.includeText as boolean | undefined,
           includeAttributes: input.includeAttributes as boolean | undefined,
           includeComputedStyles: input.includeComputedStyles as boolean | undefined,
-          maxElements: typeof input.maxElements === "number" ? input.maxElements : undefined
+          maxElements: typeof input.maxElements === "number" ? input.maxElements : undefined,
         };
 
         const result = await client.extractDom({
           tabId: input.tabId,
-          extraction
+          extraction,
         });
 
         return { type: "json", value: result };
-      }
+      },
     );
 
     server.tool(
@@ -207,34 +208,39 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
           properties: {
             baselineId: { type: "string" },
             candidateSnapshotId: { type: "string" },
-            candidateHtml: { type: "string" }
-          }
-        }
+            candidateHtml: { type: "string" },
+          },
+        },
       },
-      async (input: { baselineId: string; candidateSnapshotId?: string; candidateHtml?: string }) => {
+      async (input: {
+        baselineId: string;
+        candidateSnapshotId?: string;
+        candidateHtml?: string;
+      }) => {
         const diff = await client.compareSnapshots({
           baselineId: input.baselineId,
           candidateSnapshotId: input.candidateSnapshotId,
-          candidateHtml: input.candidateHtml
+          candidateHtml: input.candidateHtml,
         });
 
         return { type: "json", value: diff };
-      }
+      },
     );
 
     server.tool(
       "verify_ui_consistency",
       {
-        description: "Navigate to baseline and candidate URLs, perform optional actions, capture snapshots, and diff the results",
+        description:
+          "Navigate to baseline and candidate URLs, perform optional actions, capture snapshots, and diff the results",
         inputSchema: {
           type: "object",
           required: ["baseline", "candidate"],
           properties: {
             reuseTab: { type: "boolean" },
             baseline: pageSetupSchema,
-            candidate: pageSetupSchema
-          }
-        }
+            candidate: pageSetupSchema,
+          },
+        },
       },
       async (input: UiConsistencyRequest) => {
         const request: UiConsistencyRequest = {
@@ -242,24 +248,26 @@ async function startMcpServer(bridge: ExtensionBridge): Promise<void> {
           baseline: {
             url: input.baseline.url,
             actionsPrompt: input.baseline.actionsPrompt,
-            waitFor: normalizeWaitConditionInput(input.baseline.waitFor)
+            waitFor: normalizeWaitConditionInput(input.baseline.waitFor),
           },
           candidate: {
             url: input.candidate.url,
             actionsPrompt: input.candidate.actionsPrompt,
-            waitFor: normalizeWaitConditionInput(input.candidate.waitFor)
-          }
+            waitFor: normalizeWaitConditionInput(input.candidate.waitFor),
+          },
         };
 
         const result = await workflows.verifyUiConsistency(request);
         return { type: "json", value: result };
-      }
+      },
     );
 
     await server.start();
   } catch (error) {
     console.warn("[omni-eye:mcp] Failed to start Model Context Protocol server", error);
-    console.warn("[omni-eye:mcp] Running in bridge-only mode. Install @modelcontextprotocol/sdk to enable MCP support.");
+    console.warn(
+      "[omni-eye:mcp] Running in bridge-only mode. Install @modelcontextprotocol/sdk to enable MCP support.",
+    );
 
     await new Promise<void>(() => {
       /* keep process alive */
@@ -276,10 +284,10 @@ const selectorSchema = {
     role: { type: "string" },
     attributes: {
       type: "object",
-      additionalProperties: { type: "string" }
+      additionalProperties: { type: "string" },
     },
-    index: { type: "number" }
-  }
+    index: { type: "number" },
+  },
 } as const;
 
 const waitConditionSchema = {
@@ -288,8 +296,8 @@ const waitConditionSchema = {
     selector: selectorSchema,
     strategy: { type: "string", enum: ["exists", "visible"] },
     timeoutMs: { type: "number" },
-    pollIntervalMs: { type: "number" }
-  }
+    pollIntervalMs: { type: "number" },
+  },
 } as const;
 
 const actionSchema = {
@@ -312,10 +320,10 @@ const actionSchema = {
         selector: selectorSchema,
         strategy: { type: "string" },
         timeoutMs: { type: "number" },
-        pollIntervalMs: { type: "number" }
-      }
-    }
-  }
+        pollIntervalMs: { type: "number" },
+      },
+    },
+  },
 } as const;
 
 const pageSetupSchema = {
@@ -324,8 +332,8 @@ const pageSetupSchema = {
   properties: {
     url: { type: "string" },
     actionsPrompt: { type: "string" },
-    waitFor: waitConditionSchema
-  }
+    waitFor: waitConditionSchema,
+  },
 } as const;
 
 type PerformActionsInput = {
@@ -351,7 +359,7 @@ function normalizeWaitConditionInput(value: unknown): WaitCondition | undefined 
     selector,
     strategy: (value as { strategy?: WaitCondition["strategy"] }).strategy,
     timeoutMs: (value as { timeoutMs?: number }).timeoutMs,
-    pollIntervalMs: (value as { pollIntervalMs?: number }).pollIntervalMs
+    pollIntervalMs: (value as { pollIntervalMs?: number }).pollIntervalMs,
   };
 }
 

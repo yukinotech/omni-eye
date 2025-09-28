@@ -34,7 +34,7 @@ export class OmniEyeWorkflows {
     const baselineNav = await this.client.navigate({
       url: request.baseline.url,
       newTab: true,
-      waitFor: request.baseline.waitFor
+      waitFor: request.baseline.waitFor,
     });
 
     const baselineActions = parseActionsFromPrompt(request.baseline.actionsPrompt ?? "");
@@ -45,7 +45,7 @@ export class OmniEyeWorkflows {
       const response = await this.client.performActions({
         tabId: baselineNav.tabId,
         actions: baselineActions.actions,
-        options: { captureSnapshot: false, captureScreenshot: false, storeSnapshot: false }
+        options: { captureSnapshot: false, captureScreenshot: false, storeSnapshot: false },
       });
       baselineActionResults = response.results;
     }
@@ -53,14 +53,14 @@ export class OmniEyeWorkflows {
     const baselineSnapshot = await this.client.capture({
       tabId: baselineNav.tabId,
       includeScreenshot: true,
-      storeSnapshot: true
+      storeSnapshot: true,
     });
 
     const candidateNav = await this.client.navigate({
       url: request.candidate.url,
       tabId: reuseTab ? baselineNav.tabId : undefined,
       newTab: reuseTab ? false : true,
-      waitFor: request.candidate.waitFor
+      waitFor: request.candidate.waitFor,
     });
 
     const candidateActions = parseActionsFromPrompt(request.candidate.actionsPrompt ?? "");
@@ -71,7 +71,7 @@ export class OmniEyeWorkflows {
       const response = await this.client.performActions({
         tabId: candidateNav.tabId,
         actions: candidateActions.actions,
-        options: { captureSnapshot: false, captureScreenshot: false, storeSnapshot: false }
+        options: { captureSnapshot: false, captureScreenshot: false, storeSnapshot: false },
       });
       candidateActionResults = response.results;
     }
@@ -79,12 +79,12 @@ export class OmniEyeWorkflows {
     const candidateSnapshot = await this.client.capture({
       tabId: candidateNav.tabId,
       includeScreenshot: true,
-      storeSnapshot: true
+      storeSnapshot: true,
     });
 
     const diff = await this.client.compareSnapshots({
       baselineId: baselineSnapshot.id,
-      candidateSnapshotId: candidateSnapshot.id
+      candidateSnapshotId: candidateSnapshot.id,
     });
 
     return {
@@ -94,7 +94,7 @@ export class OmniEyeWorkflows {
       baselineActions: baselineActionResults,
       candidateActions: candidateActionResults,
       diagnostics,
-      summary: buildSummary(diff)
+      summary: buildSummary(diff),
     };
   }
 }

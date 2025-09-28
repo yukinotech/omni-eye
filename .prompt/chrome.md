@@ -85,5 +85,4 @@ UI 对比：Chrome 插件提供 DOM 和截图；MCP Server 负责分析。
 Chrome Extension 负责执行和回传。
 MCP Server 负责编排和分析。
 
-
 完成上述功能

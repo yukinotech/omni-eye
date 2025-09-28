@@ -10,7 +10,7 @@ import {
   ElementSnapshot,
   PageAction,
   Snapshot,
-  WaitCondition
+  WaitCondition,
 } from "./shared/messages.js";
 
 declare global {
@@ -18,7 +18,10 @@ declare global {
     omniEye?: {
       captureSnapshot: () => Snapshot;
       getLastSnapshot: () => Snapshot | null;
-      performActions: (actions: PageAction[], options?: ContentActionOptions) => Promise<ActionResult[]>;
+      performActions: (
+        actions: PageAction[],
+        options?: ContentActionOptions,
+      ) => Promise<ActionResult[]>;
       waitFor: (condition: WaitCondition) => Promise<boolean>;
     };
   }
@@ -37,7 +40,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       sendResponse({
         kind: "content:error",
         requestId: message.requestId,
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
     });
 
@@ -66,11 +69,15 @@ function handleCapture(requestId: string): ContentResponse {
   return {
     kind: "content:capture:result",
     requestId,
-    snapshot
+    snapshot,
   };
 }
 
-async function handleActions(requestId: string, actions: PageAction[], options?: ContentActionOptions): Promise<ContentResponse> {
+async function handleActions(
+  requestId: string,
+  actions: PageAction[],
+  options?: ContentActionOptions,
+): Promise<ContentResponse> {
   const results: ActionResult[] = [];
   for (let index = 0; index < actions.length; index += 1) {
     const action = actions[index];
@@ -83,7 +90,7 @@ async function handleActions(requestId: string, actions: PageAction[], options?:
         index,
         action,
         status: "error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
       });
       break;
     }
@@ -101,7 +108,7 @@ async function handleActions(requestId: string, actions: PageAction[], options?:
     kind: "content:actions:result",
     requestId,
     results,
-    snapshot
+    snapshot,
   };
 }
 
@@ -114,7 +121,7 @@ async function handleWait(requestId: string, condition: WaitCondition): Promise<
     kind: "content:wait:result",
     requestId,
     satisfied,
-    elapsedMs
+    elapsedMs,
   };
 }
 
@@ -123,7 +130,7 @@ function handleExtract(requestId: string, extraction: DomExtractionOptions): Con
   return {
     kind: "content:extract:result",
     requestId,
-    extraction: result
+    extraction: result,
   };
 }
 
@@ -206,7 +213,11 @@ async function performInputAction(action: Extract<PageAction, { type: "input" }>
 async function performScrollAction(action: Extract<PageAction, { type: "scroll" }>): Promise<void> {
   if (action.selector) {
     const element = resolveElement(action.selector);
-    element.scrollIntoView({ behavior: action.behavior ?? "smooth", block: "center", inline: "center" });
+    element.scrollIntoView({
+      behavior: action.behavior ?? "smooth",
+      block: "center",
+      inline: "center",
+    });
     return;
   }
 
@@ -269,7 +280,9 @@ async function waitForCondition(condition: WaitCondition): Promise<boolean> {
 }
 
 function extractDom(options: DomExtractionOptions): DomExtractionResult {
-  const elements = options.selector ? resolveElements(options.selector, options.maxElements) : [document.documentElement];
+  const elements = options.selector
+    ? resolveElements(options.selector, options.maxElements)
+    : [document.documentElement];
   const result: ElementSnapshot[] = [];
   const limit = options.maxElements ?? elements.length;
 
@@ -278,7 +291,7 @@ function extractDom(options: DomExtractionOptions): DomExtractionResult {
     const bounds = element.getBoundingClientRect();
     const snapshot: ElementSnapshot = {
       selector: options.selector ?? describeElement(element),
-      bounds: rectToLike(bounds)
+      bounds: rectToLike(bounds),
     };
 
     if (options.includeHtml ?? true) {
@@ -350,21 +363,27 @@ function findElements(selector: ElementSelector): HTMLElement[] {
     baseCandidates = Array.from(document.querySelectorAll(selector.css));
   } else {
     const allElements = Array.from(document.querySelectorAll("*"));
-    baseCandidates = [document.documentElement, ...allElements].filter((element): element is Element => element instanceof Element);
+    baseCandidates = [document.documentElement, ...allElements].filter(
+      (element): element is Element => element instanceof Element,
+    );
   }
 
-  let filtered = baseCandidates.filter((candidate): candidate is HTMLElement => candidate instanceof HTMLElement);
+  let filtered = baseCandidates.filter(
+    (candidate): candidate is HTMLElement => candidate instanceof HTMLElement,
+  );
 
   if (selector.role) {
     const role = selector.role.toLowerCase();
-    filtered = filtered.filter((element) => (element.getAttribute("role") ?? "").toLowerCase() === role);
+    filtered = filtered.filter(
+      (element) => (element.getAttribute("role") ?? "").toLowerCase() === role,
+    );
   }
 
   if (selector.attributes) {
     filtered = filtered.filter((element) =>
-      Object.entries(selector.attributes as Record<string, string>).every(([attribute, value]) =>
-        element.getAttribute(attribute) === value
-      )
+      Object.entries(selector.attributes as Record<string, string>).every(
+        ([attribute, value]) => element.getAttribute(attribute) === value,
+      ),
     );
   }
 
@@ -406,8 +425,8 @@ function buildSnapshot(): Snapshot {
       height: window.innerHeight,
       scrollX: window.scrollX,
       scrollY: window.scrollY,
-      devicePixelRatio: window.devicePixelRatio
-    }
+      devicePixelRatio: window.devicePixelRatio,
+    },
   };
 }
 
@@ -441,10 +460,12 @@ function collectComputedStyles(element: HTMLElement): Record<string, string> {
     "color",
     "background-color",
     "border",
-    "opacity"
+    "opacity",
   ];
 
-  return Object.fromEntries(properties.map((property) => [property, computed.getPropertyValue(property)]));
+  return Object.fromEntries(
+    properties.map((property) => [property, computed.getPropertyValue(property)]),
+  );
 }
 
 function describeElement(element: Element): ElementSelector {
@@ -512,7 +533,7 @@ function rectToLike(rect: DOMRect): DOMRectLike {
     top: rect.top,
     right: rect.right,
     bottom: rect.bottom,
-    left: rect.left
+    left: rect.left,
   };
 }
 
@@ -579,5 +600,5 @@ window.omniEye = {
     const response = await handleActions(createSnapshotId(), actions, options);
     return response.kind === "content:actions:result" ? response.results : [];
   },
-  waitFor: async (condition: WaitCondition) => waitForCondition(condition)
+  waitFor: async (condition: WaitCondition) => waitForCondition(condition),
 };

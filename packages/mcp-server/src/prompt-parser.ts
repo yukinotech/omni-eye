@@ -48,7 +48,9 @@ function tryParseActionsJson(text: string, diagnostics: string[]): PageAction[] 
 
     return actions;
   } catch (error) {
-    diagnostics.push(`Failed to parse prompt as JSON: ${error instanceof Error ? error.message : String(error)}`);
+    diagnostics.push(
+      `Failed to parse prompt as JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return null;
   }
 }
@@ -70,7 +72,7 @@ export function normaliseAction(candidate: unknown): PageAction | null {
         selector,
         button: (candidate as { button?: "left" | "middle" | "right" }).button ?? "left",
         clickCount: (candidate as { clickCount?: number }).clickCount,
-        delayMs: (candidate as { delayMs?: number }).delayMs
+        delayMs: (candidate as { delayMs?: number }).delayMs,
       };
     case "input": {
       if (!selector) return null;
@@ -83,7 +85,7 @@ export function normaliseAction(candidate: unknown): PageAction | null {
         selector,
         value,
         replace: (candidate as { replace?: boolean }).replace,
-        focus: (candidate as { focus?: boolean }).focus
+        focus: (candidate as { focus?: boolean }).focus,
       };
     }
     case "scroll": {
@@ -94,14 +96,15 @@ export function normaliseAction(candidate: unknown): PageAction | null {
 
       const xValue = typeof xCandidate === "number" ? xCandidate : undefined;
       const yValue = typeof yCandidate === "number" ? yCandidate : undefined;
-      const behavior = typeof behaviorCandidate === "string" ? (behaviorCandidate as ScrollBehavior) : undefined;
+      const behavior =
+        typeof behaviorCandidate === "string" ? (behaviorCandidate as ScrollBehavior) : undefined;
 
       const action: Extract<PageAction, { type: "scroll" }> = {
         type: "scroll",
         selector,
         x: xValue,
         y: yValue,
-        behavior
+        behavior,
       };
       return action;
     }
@@ -116,22 +119,22 @@ export function normaliseAction(candidate: unknown): PageAction | null {
           selector: normaliseSelector((condition as { selector?: unknown }).selector),
           strategy: (condition as { strategy?: "exists" | "visible" }).strategy,
           timeoutMs: (condition as { timeoutMs?: number }).timeoutMs,
-          pollIntervalMs: (condition as { pollIntervalMs?: number }).pollIntervalMs
-        }
+          pollIntervalMs: (condition as { pollIntervalMs?: number }).pollIntervalMs,
+        },
       };
     }
     case "focus": {
       if (!selector) return null;
       return {
         type: "focus",
-        selector
+        selector,
       };
     }
     case "clear": {
       if (!selector) return null;
       return {
         type: "clear",
-        selector
+        selector,
       };
     }
     default:
@@ -153,8 +156,8 @@ export function normaliseSelector(selector: unknown): ElementSelector | undefine
     text: typeof base.text === "string" ? base.text : undefined,
     exactText: typeof base.exactText === "boolean" ? base.exactText : undefined,
     role: typeof base.role === "string" ? base.role : undefined,
-    attributes: typeof base.attributes === "object" ? base.attributes ?? undefined : undefined,
-    index: typeof base.index === "number" ? base.index : undefined
+    attributes: typeof base.attributes === "object" ? (base.attributes ?? undefined) : undefined,
+    index: typeof base.index === "number" ? base.index : undefined,
   };
 }
 
@@ -191,7 +194,11 @@ function parseLine(line: string): PageAction | null {
 
   if (lower.startsWith("input") || lower.startsWith("type") || lower.startsWith("输入")) {
     const value = extractQuoted(line) ?? extractTrailingValue(line);
-    const selectorPart = line.replace(/^(input|type|输入)/i, "").replace(value ?? "", "").replace(/到|在|到达|into|为|\s+value/i, "").trim();
+    const selectorPart = line
+      .replace(/^(input|type|输入)/i, "")
+      .replace(value ?? "", "")
+      .replace(/到|在|到达|into|为|\s+value/i, "")
+      .trim();
     const selector = parseSelectorFragment(selectorPart);
     if (!selector || !value) {
       return null;
@@ -232,8 +239,8 @@ function parseLine(line: string): PageAction | null {
         selector,
         strategy: selector ? "visible" : "exists",
         timeoutMs: 10_000,
-        pollIntervalMs: 200
-      }
+        pollIntervalMs: 200,
+      },
     };
   }
 
@@ -255,7 +262,8 @@ function parseSelectorFragment(fragment: unknown): ElementSelector | undefined {
     return { css: cssMatch[1].trim() };
   }
 
-  const textMatch = trimmed.match(/text[:=]\s*"?([^"']+)"?/i) ?? trimmed.match(/文本[:=]\s*"?([^"']+)"?/i);
+  const textMatch =
+    trimmed.match(/text[:=]\s*"?([^"']+)"?/i) ?? trimmed.match(/文本[:=]\s*"?([^"']+)"?/i);
   if (textMatch) {
     return { text: textMatch[1].trim(), exactText: false };
   }
@@ -269,8 +277,8 @@ function parseSelectorFragment(fragment: unknown): ElementSelector | undefined {
   if (attrMatch && attrMatch.groups) {
     return {
       attributes: {
-        [attrMatch.groups.name.trim()]: attrMatch.groups.value.trim()
-      }
+        [attrMatch.groups.name.trim()]: attrMatch.groups.value.trim(),
+      },
     };
   }
 

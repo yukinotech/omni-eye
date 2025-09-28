@@ -1,7 +1,4 @@
 {
   "files": [],
-  "references": [
-    { "path": "./packages/chrome-extension" },
-    { "path": "./packages/mcp-server" }
-  ]
+  "references": [{ "path": "./packages/chrome-extension" }, { "path": "./packages/mcp-server" }]
 }

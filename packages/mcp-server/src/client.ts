@@ -7,7 +7,7 @@ import type {
   PageAction,
   Screenshot,
   Snapshot,
-  WaitCondition
+  WaitCondition,
 } from "./messages.js";
 import { ExtensionBridge } from "./bridge.js";
 
@@ -73,7 +73,7 @@ export class OmniEyeClient {
       tabId: params.tabId,
       newTab: params.newTab,
       waitFor: params.waitFor,
-      timeoutMs: params.timeoutMs
+      timeoutMs: params.timeoutMs,
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -88,7 +88,7 @@ export class OmniEyeClient {
       requestId,
       tabId: params.tabId,
       includeScreenshot: params.includeScreenshot ?? true,
-      storeSnapshot: params.storeSnapshot ?? true
+      storeSnapshot: params.storeSnapshot ?? true,
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -104,7 +104,7 @@ export class OmniEyeClient {
       requestId,
       tabId: params.tabId,
       actions: params.actions,
-      options: params.options
+      options: params.options,
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -120,8 +120,8 @@ export class OmniEyeClient {
       tabId: params.tabId,
       options: {
         format: params.format,
-        quality: params.quality
-      }
+        quality: params.quality,
+      },
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -136,7 +136,7 @@ export class OmniEyeClient {
       kind: "agent:dom" as const,
       requestId,
       tabId: params.tabId,
-      extraction: params.extraction
+      extraction: params.extraction,
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -153,7 +153,7 @@ export class OmniEyeClient {
       baselineId: params.baselineId,
       candidateSnapshotId: params.candidateSnapshotId,
       candidateHtml: params.candidateHtml,
-      candidateScreenshot: params.candidateScreenshot
+      candidateScreenshot: params.candidateScreenshot,
     } satisfies AgentCommand;
 
     const response = await this.bridge.send(command);
@@ -161,13 +161,18 @@ export class OmniEyeClient {
     return this.expectKind(response, "agent:diff:result");
   }
 
-  private expectKind<Kind extends AgentResponse["kind"]>(response: AgentResponse, expected: Kind): Extract<AgentResponse, { kind: Kind }> {
+  private expectKind<Kind extends AgentResponse["kind"]>(
+    response: AgentResponse,
+    expected: Kind,
+  ): Extract<AgentResponse, { kind: Kind }> {
     if (response.kind === "agent:error") {
       throw new Error(response.message);
     }
 
     if (response.kind !== expected) {
-      throw new Error(`Unexpected response kind: expected ${expected} but received ${response.kind}`);
+      throw new Error(
+        `Unexpected response kind: expected ${expected} but received ${response.kind}`,
+      );
     }
 
     return response as Extract<AgentResponse, { kind: Kind }>;

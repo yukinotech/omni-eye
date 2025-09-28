@@ -45,19 +45,31 @@ export class ExtensionBridge extends EventEmitter {
     this.heartbeatIntervalMs = heartbeatIntervalMs;
   }
 
-  on<EventName extends keyof BridgeEventMap>(event: EventName, listener: (...args: BridgeEventMap[EventName]) => void): this {
+  on<EventName extends keyof BridgeEventMap>(
+    event: EventName,
+    listener: (...args: BridgeEventMap[EventName]) => void,
+  ): this {
     return super.on(event, listener as (...args: unknown[]) => void);
   }
 
-  once<EventName extends keyof BridgeEventMap>(event: EventName, listener: (...args: BridgeEventMap[EventName]) => void): this {
+  once<EventName extends keyof BridgeEventMap>(
+    event: EventName,
+    listener: (...args: BridgeEventMap[EventName]) => void,
+  ): this {
     return super.once(event, listener as (...args: unknown[]) => void);
   }
 
-  off<EventName extends keyof BridgeEventMap>(event: EventName, listener: (...args: BridgeEventMap[EventName]) => void): this {
+  off<EventName extends keyof BridgeEventMap>(
+    event: EventName,
+    listener: (...args: BridgeEventMap[EventName]) => void,
+  ): this {
     return super.off(event, listener as (...args: unknown[]) => void);
   }
 
-  emit<EventName extends keyof BridgeEventMap>(event: EventName, ...args: BridgeEventMap[EventName]): boolean {
+  emit<EventName extends keyof BridgeEventMap>(
+    event: EventName,
+    ...args: BridgeEventMap[EventName]
+  ): boolean {
     return super.emit(event, ...args);
   }
 
