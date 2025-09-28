@@ -1,0 +1,12 @@
+{
+  "name": "@omni-eye/chrome-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "echo \"No lint configured for chrome extension yet\"",
+    "test": "echo \"No tests for chrome extension yet\""
+  }
+}

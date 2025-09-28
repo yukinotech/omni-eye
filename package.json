@@ -1,0 +1,23 @@
+{
+  "name": "omni-eye",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.261",
+    "@types/node": "^20.14.10",
+    "typescript": "^5.4.5"
+  }
+}

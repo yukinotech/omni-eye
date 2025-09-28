@@ -1,0 +1,21 @@
+{
+  "name": "@omni-eye/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "echo \"No lint configured for MCP server yet\"",
+    "test": "echo \"No tests for MCP server yet\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "ws": "^8.17.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.1"
+  }
+}
