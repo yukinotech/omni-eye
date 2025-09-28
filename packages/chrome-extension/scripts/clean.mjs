@@ -10,6 +10,8 @@ const tsconfigBuildInfo = resolve(projectRoot, "tsconfig.tsbuildinfo");
 const distDir = resolve(projectRoot, "dist");
 const manifestSource = resolve(projectRoot, "public/manifest.json");
 const manifestTarget = resolve(distDir, "manifest.json");
+const iconSource = resolve(projectRoot, "public/icon.png");
+const iconTarget = resolve(distDir, "icon.png");
 
 async function prepareDist() {
   console.log("清理 dist 目录...");
@@ -17,7 +19,8 @@ async function prepareDist() {
   await rm(tsconfigBuildInfo, { force: true });
   await mkdir(distDir, { recursive: true });
   await copyFile(manifestSource, manifestTarget);
-  console.log("manifest.json 已复制到 dist");
+  await copyFile(iconSource, iconTarget);
+  console.log("manifest.json , icon.png 已复制到 dist");
 }
 
 try {

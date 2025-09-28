@@ -15,7 +15,13 @@
       "run_at": "document_idle"
     }
   ],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
   "action": {
+    "default_icon": "icon.png",
     "default_title": "Omni Eye"
   },
   "externally_connectable": {
