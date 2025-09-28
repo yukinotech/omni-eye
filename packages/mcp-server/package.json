@@ -9,13 +9,14 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "lint": "echo \"No lint configured for MCP server yet\"",
-    "test": "echo \"No tests for MCP server yet\""
+    "test": "tsx test/integration.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.2",
     "ws": "^8.17.1"
   },
   "devDependencies": {
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "typescript": "5.9.2"
   }
 }

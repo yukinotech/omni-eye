@@ -11,7 +11,7 @@ import {
   PageAction,
   Snapshot,
   WaitCondition,
-} from "./shared/messages.js";
+} from "./shared/messages";
 
 declare global {
   interface Window {

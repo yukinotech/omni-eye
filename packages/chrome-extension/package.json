@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
+    "build": "tsc -p tsconfig.json && node ./scripts/copy-public.mjs",
+    "dev": "node ./scripts/dev.mjs",
     "lint": "echo \"No lint configured for chrome extension yet\"",
     "test": "echo \"No tests for chrome extension yet\""
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
   }
 }
