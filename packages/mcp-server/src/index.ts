@@ -8,8 +8,8 @@ import {
   type PromptParseResult,
 } from "./prompt-parser.js";
 import type { ElementSelector, PageAction, WaitCondition } from "./messages.js";
-import { McpServer } from "@modelcontextprotocol/sdk/dist/esm/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/dist/esm/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 export type OmniEyeClientAdapter = Pick<
   OmniEyeClient,
