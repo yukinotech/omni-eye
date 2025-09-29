@@ -9,7 +9,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "lint": "echo \"No lint configured for MCP server yet\"",
-    "test": "tsx test/integration.test.ts"
+    "test": "tsx test/integration.test.ts",
+    "test:open-page": "tsx test/open-page.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.2",
