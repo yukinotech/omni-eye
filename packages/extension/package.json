@@ -1,0 +1,15 @@
+{
+  "name": "omni-eye-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup --config tsup.config.ts && node ./scripts/copy-assets.js",
+    "dev": "tsup --config tsup.config.ts --watch",
+    "lint": "echo 'No lint step for extension yet'",
+    "test": "echo 'No tests for extension yet'"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0"
+  }
+}

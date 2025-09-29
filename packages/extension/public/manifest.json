@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Omni Eye MCP Bridge",
+  "description": "Bridges Chrome pages with local MCP native adapter.",
+  "version": "0.1.0",
+  "permissions": ["nativeMessaging", "scripting", "tabs", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Omni Eye MCP",
+    "default_popup": "ui/popup.html"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

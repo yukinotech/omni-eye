@@ -1,0 +1,36 @@
+{
+  "name": "mcp-bundle",
+  "version": "0.1.0",
+  "description": "MCP Native Messaging adapter, core protocol utilities, and server SDK.",
+  "private": false,
+  "type": "commonjs",
+  "config": {
+    "extensionId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "mcp-adapter": "./bin/mcp-adapter.js"
+  },
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "dev": "tsup --config tsup.config.ts --watch",
+    "lint": "echo 'No lint step for mcp-bundle yet'",
+    "test": "echo 'No tests for mcp-bundle yet'",
+    "postinstall": "node ./scripts/register-native-host.js",
+    "preuninstall": "node ./scripts/unregister-native-host.js",
+    "prepare": "tsup --config tsup.config.ts"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "scripts/*.js",
+    "README.md"
+  ],
+  "dependencies": {
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0"
+  }
+}

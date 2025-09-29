@@ -1,42 +1,73 @@
 # Omni Eye Monorepo
 
-Monorepo scaffolding for the Omni Eye project. It contains a Chrome extension that can navigate, execute DOM interactions, capture DOM/screenshot snapshots, and stream data to a coordinating MCP-compatible server built with Node.js and TypeScript.
+This repository hosts the full bridge between Model Context Protocol (MCP) servers, a Native Messaging adapter, and the Chrome extension that executes browser capabilities on behalf of an agent. Everything is written in TypeScript and managed with pnpm workspaces.
 
-## Packages
+## Workspace Layout
 
-- `packages/chrome-extension` – Manifest V3 extension; exposes navigation, action, capture, extraction, and diff commands over a WebSocket bridge.
-- `packages/mcp-server` – Node.js service that orchestrates the extension, surfaces MCP tools (open page, perform actions, capture/extract, compare, verify), and provides higher-level workflows.
+- `packages/mcp-bundle` – Publishable npm package bundling the native host adapter, shared protocol/core helpers, the MCP server SDK, a small CLI, and install/uninstall scripts that manage the Chrome Native Messaging manifest.
+- `packages/extension` – Manifest V3 Chrome extension that talks to the native adapter, relays requests to content scripts, and exposes a minimal popup UI for diagnostics.
 
 ## Getting Started
 
+1. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+2. Build everything:
+   ```bash
+   pnpm build
+   ```
+3. Build the extension bundle and load it in Chrome (Developer Mode → Load unpacked → point to `packages/extension/dist`).
+4. (Optional) Install the adapter globally during development:
+   ```bash
+   pnpm --filter mcp-bundle build
+   pnpm --filter mcp-bundle link --global
+   MCP_EXTENSION_ID=<your_extension_id> pnpm --filter mcp-bundle exec mcp-adapter --help
+   ```
+   The `postinstall` script will try to register the native host manifest if `MCP_EXTENSION_ID` is provided. Without the ID the script skips registration.
+
+## Development Scripts
+
+Use pnpm filters to run package-level scripts:
+
 ```bash
-pnpm install
-pnpm build
+pnpm --filter mcp-bundle build        # Compile adapter + SDK to dist/
+pnpm --filter mcp-bundle run dev      # Rebuild on change
+pnpm --filter omni-eye-extension build
+pnpm --filter omni-eye-extension dev  # Watch background/content scripts
 ```
 
-Each package keeps its own scripts; run them with pnpm filters, for example:
+## Communication Flow
 
-```bash
-pnpm --filter @omni-eye/chrome-extension dev
-pnpm --filter @omni-eye/mcp-server dev
-```
+1. The Chrome extension (background service worker) connects to the native host `mcp_adapter` via Chrome Native Messaging.
+2. The native host (adapter) maintains a Unix domain socket / Windows named pipe (`/tmp/mcp-adapter.sock` or `\\.\pipe\mcp-adapter`).
+3. One or more MCP servers connect to that socket using the `McpClient` from the SDK, register their capabilities, and exchange requests/responses with the browser.
+4. Messages across all boundaries use the same JSON envelope shape which carries `id`, `type`, `cap`, and optional metadata.
 
-### Developing the Extension
+## Native Host Manifest
 
-1. Build the extension (`pnpm --filter @omni-eye/chrome-extension build`).
-2. Copy `packages/chrome-extension/public/manifest.json` plus the generated `dist` assets into a fresh folder (or create a small build script to do so).
-3. Load the folder as an unpacked extension in Chrome.
+When the `mcp-bundle` package is installed globally, its `postinstall` script calls `scripts/register-native-host.js`. The script:
 
-### Running the MCP Bridge
+- Locates the platform-specific `mcp-adapter` executable stub.
+- Writes the manifest file to the correct directory for macOS, Linux, or Windows.
+- Optionally registers the manifest in the Windows registry.
 
-```bash
-pnpm --filter @omni-eye/mcp-server dev
-```
+If the manifest cannot be written (e.g., missing extension ID or adapter binary), the script prints a warning but does not abort installation.
 
-The server listens for a WebSocket connection from the browser extension on `ws://localhost:7337`. Install `@modelcontextprotocol/sdk` to expose the built-in tools (navigation, action execution, capture, DOM extraction, snapshot comparison, UI verification). Without the SDK, the bridge still runs and logs snapshots, which is helpful during development.
+## Extension Overview
 
-## Next Steps
+- Service worker (`background.ts`) keeps the Native Messaging connection alive, routes adapter requests to the active tab, and tracks outstanding runtime requests.
+- Content script (`content.ts`) exposes simple capabilities (`dom.query`, `dom.diff`) as examples.
+- Popup (`ui/popup.ts`) provides a lightweight status check and demonstrates messaging into the adapter.
 
-- Add an automated build step that bundles manifest + TypeScript output for the extension.
-- Integrate the official MCP SDK to declare resources and tools tailored to your AI agent workflow.
-- Wire agent-side automation logic (e.g., Playwright) to call the MCP tools and reconcile detected diffs.
+The extension build uses tsup to bundle TypeScript into `dist/`, and a small Node script copies static assets from `public/`.
+
+## Publishing Checklist
+
+- Ensure `packages/mcp-bundle/package.json` has the correct `config.extensionId` before publishing.
+- Run `pnpm --filter mcp-bundle build` so `dist/` contains the compiled adapter and scripts.
+- Publish `packages/extension/dist` via the Chrome Web Store separately.
+
+## License
+
+MIT (replace or update as needed).
