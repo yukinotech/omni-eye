@@ -1,6 +1,6 @@
 import os from "os";
 import path from "path";
-import { ADAPTER_SOCKET_BASENAME } from "../mcp-core/constants";
+import { ADAPTER_SOCKET_BASENAME } from "../mcp-core/constants.js";
 
 export function adapterSocketPath(): string {
   if (process.platform === "win32") {

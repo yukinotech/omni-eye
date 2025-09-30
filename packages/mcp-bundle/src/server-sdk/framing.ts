@@ -1,4 +1,4 @@
-import type { Envelope } from "../mcp-core/envelope";
+import type { Envelope } from "../mcp-core/envelope.js";
 
 const NEWLINE = "\n";
 

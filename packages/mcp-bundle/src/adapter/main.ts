@@ -10,8 +10,8 @@ import {
   RegisterEnvelope,
   HeartbeatEnvelope,
   EventEnvelope,
-} from "../mcp-core/envelope";
-import { buildError, ErrorCode } from "../mcp-core/errors";
+} from "../mcp-core/envelope.js";
+import { buildError, ErrorCode } from "../mcp-core/errors.js";
 import { createLogger } from "./logger";
 import { NativeMessageReader, writeNativeMessage } from "./nativeIo";
 import { encodeEnvelope, EnvelopeStreamDecoder } from "../server-sdk/framing";
