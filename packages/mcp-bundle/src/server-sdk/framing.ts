@@ -1,4 +1,4 @@
-import type { Envelope } from "../mcp-core/index";
+import type { Envelope } from "../mcp-core/envelope";
 
 const NEWLINE = "\n";
 
@@ -9,7 +9,10 @@ export function encodeEnvelope(envelope: Envelope): Buffer {
 
 export class EnvelopeStreamDecoder {
   private buffer = "";
-  constructor(private readonly onEnvelope: (envelope: Envelope) => void, private readonly onError: (error: unknown) => void) {}
+  constructor(
+    private readonly onEnvelope: (envelope: Envelope) => void,
+    private readonly onError: (error: unknown) => void,
+  ) {}
 
   push(chunk: Buffer) {
     this.buffer += chunk.toString("utf8");

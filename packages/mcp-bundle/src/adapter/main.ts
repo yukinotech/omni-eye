@@ -10,7 +10,7 @@ import {
   RegisterEnvelope,
   HeartbeatEnvelope,
   EventEnvelope,
-} from "../mcp-core/index";
+} from "../mcp-core/envelope";
 import { buildError, ErrorCode } from "../mcp-core/errors";
 import { createLogger } from "./logger";
 import { NativeMessageReader, writeNativeMessage } from "./nativeIo";
