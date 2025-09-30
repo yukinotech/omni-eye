@@ -1,7 +1,0 @@
-{
-  "files": [],
-  "references": [
-    { "path": "./packages/mcp-bundle" },
-    { "path": "./packages/extension" }
-  ]
-}

@@ -1,6 +1,6 @@
 import { ensureId, Envelope, ErrorEnvelope, RequestEnvelope, isEnvelope } from "./shared/envelope";
 
-const HOST_NAME = "mcp_adapter";
+const HOST_NAME = "omni_eye_mcp_adapter";
 const EXT_CAPS = ["dom.diff", "dom.query", "page.screenshot"];
 
 let nativePort: chrome.runtime.Port | null = null;

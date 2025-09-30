@@ -14,12 +14,7 @@
     "format": "prettier --write ."
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=20.0.0"
   },
-  "devDependencies": {
-    "@types/chrome": "^0.0.261",
-    "@types/node": "^20.14.10",
-    "prettier": "^3.6.2",
-    "typescript": "5.9.2"
-  }
+  "devDependencies": {}
 }

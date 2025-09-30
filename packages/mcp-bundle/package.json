@@ -18,8 +18,7 @@
     "lint": "echo 'No lint step for mcp-bundle yet'",
     "test": "echo 'No tests for mcp-bundle yet'",
     "postinstall": "node ./scripts/register-native-host.js",
-    "preuninstall": "node ./scripts/unregister-native-host.js",
-    "prepare": "tsup --config tsup.config.ts"
+    "preuninstall": "node ./scripts/unregister-native-host.js"
   },
   "files": [
     "dist",

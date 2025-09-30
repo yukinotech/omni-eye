@@ -12,9 +12,9 @@ function handleDomQuery(payload: DomQueryPayload) {
     count: nodes.length,
     matches: nodes.slice(0, 20).map((node) => ({
       text: node.textContent ?? "",
-      html: node instanceof HTMLElement ? node.outerHTML : node.textContent ?? "",
-      tag: node instanceof HTMLElement ? node.tagName.toLowerCase() : node.nodeName
-    }))
+      html: node instanceof HTMLElement ? node.outerHTML : (node.textContent ?? ""),
+      tag: node instanceof HTMLElement ? node.tagName.toLowerCase() : node.nodeName,
+    })),
   };
 }
 
@@ -22,7 +22,7 @@ function handleDomDiff() {
   return {
     html: document.documentElement.outerHTML,
     title: document.title,
-    location: window.location.href
+    location: window.location.href,
   };
 }
 
@@ -49,8 +49,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({
           error: {
             code: "cap_not_found",
-            message: `Capability ${envelope.cap} not implemented in content script`
-          }
+            message: `Capability ${envelope.cap} not implemented in content script`,
+          },
         });
         break;
     }
@@ -58,10 +58,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     sendResponse({
       error: {
         code: "internal",
-        message: error instanceof Error ? error.message : String(error)
-      }
+        message: error instanceof Error ? error.message : String(error),
+      },
     });
   }
 
   return true;
 });
+
+console.log("omni-eye content.js loaded successfully");
