@@ -1,4 +1,4 @@
-import { Envelope } from "../mcp-core";
+import type { Envelope } from "../mcp-core/index";
 
 const HEADER_BYTES = 4;
 

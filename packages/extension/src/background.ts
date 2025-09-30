@@ -36,7 +36,7 @@ function connectNative() {
   nativePort.onDisconnect.addListener(() => {
     const lastError = chrome.runtime.lastError;
     if (lastError) {
-      log("Native host disconnect", lastError.message);
+      log("Native host disconnect: ", lastError.message);
     } else {
       log("Native host disconnected");
     }

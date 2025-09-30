@@ -6,7 +6,7 @@ function isWorkspaceInstall() {
   const pkgRoot = path.join(__dirname, "..");
   const workspaceMarker = path.join(pkgRoot, "tsconfig.json");
 
-  if (fs.existsSync(workspaceMarker)) {
+  if (fs.existsSync(workspaceMarker) && process.env.TEST !== "true") {
     console.log("[mcp-bundle] Skipping native host registration during workspace install.");
     return true;
   }

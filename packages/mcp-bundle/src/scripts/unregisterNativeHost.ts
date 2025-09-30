@@ -3,7 +3,7 @@ import path from "path";
 import os from "os";
 import { spawnSync } from "child_process";
 
-const HOST_NAME = "mcp_adapter";
+const HOST_NAME = "omni_eye_mcp_adapter";
 
 function log(message: string) {
   console.log(`[mcp-bundle] ${message}`);

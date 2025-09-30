@@ -1,9 +1,9 @@
-const levelWeights: Record<LogLevel, number> = {
+const levelWeights = {
   error: 0,
   warn: 1,
   info: 2,
   debug: 3
-};
+} as const;
 
 export type LogLevel = keyof typeof levelWeights;
 
