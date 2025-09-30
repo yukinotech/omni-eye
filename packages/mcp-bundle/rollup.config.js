@@ -6,6 +6,7 @@ export default [
       "adapter/main": "src/adapter/main.ts",
       "scripts/registerNativeHost": "src/scripts/registerNativeHost.ts",
       "scripts/unregisterNativeHost": "src/scripts/unregisterNativeHost.ts",
+      "cli/index": "src/cli/index.ts",
     },
     output: {
       dir: "dist",

@@ -2,7 +2,7 @@ import fs from "fs";
 import net from "net";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs";
-import { adapterSocketPath } from "../server-sdk";
+import { adapterSocketPath } from "../server-sdk/index";
 
 interface StatusResult {
   socketPath: string;

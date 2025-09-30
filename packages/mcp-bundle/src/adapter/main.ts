@@ -19,7 +19,7 @@ import { adapterSocketPath } from "../server-sdk/socketName";
 
 const log = createLogger("adapter");
 
-log.info("Adapter script loaded");
+log?.debug?.("Adapter script loaded");
 
 interface McpConnection {
   socket: net.Socket;
@@ -71,12 +71,12 @@ function removeConnection(connection: McpConnection) {
 
 function ensureSocketCleanup(socket: net.Socket) {
   socket.on("error", (error) => {
-    log.warn("Socket error", error.message);
+    log?.warn?.("Socket error", error.message);
   });
   socket.on("close", () => {
     const connection = connectionsBySocket.get(socket);
     if (connection) {
-      log.info("MCP disconnected", { serverId: connection.serverId ?? "unknown" });
+      log?.info?.("MCP disconnected", { serverId: connection.serverId ?? "unknown" });
       removeConnection(connection);
     }
   });
@@ -95,7 +95,7 @@ function handleRegister(connection: McpConnection, envelope: RegisterEnvelope) {
   connection.caps = new Set(caps);
   connection.lastHeartbeat = Date.now();
   connectionsById.set(serverId, connection);
-  log.info("MCP registered", { serverId, caps, version });
+  log?.info?.("MCP registered", { serverId, caps, version });
   caps.forEach((cap) => addCap(serverId, cap));
   sendEventToExtension({
     type: "EVENT",
@@ -130,19 +130,19 @@ function sendEventToExtension(envelope: EventEnvelope) {
   try {
     writeNativeMessage(process.stdout, envelope);
   } catch (error) {
-    log.error("Failed to forward event to extension", error);
+    log?.error?.("Failed to forward event to extension", error);
   }
 }
 
 function sendToExtension(envelope: Envelope) {
   if (!extensionConnected) {
-    log.debug("Extension not connected; drop message", envelope);
+    log?.debug?.("Extension not connected; drop message", envelope);
     return;
   }
   try {
     writeNativeMessage(process.stdout, envelope);
   } catch (error) {
-    log.error("Failed to write to extension", error);
+    log?.error?.("Failed to write to extension", error);
   }
 }
 
@@ -192,7 +192,7 @@ function safeUnlinkSocket(socketPath: string) {
       fs.unlinkSync(socketPath);
     }
   } catch (error) {
-    log.warn("Failed to remove stale socket", { socketPath, error });
+    log?.warn?.("Failed to remove stale socket", { socketPath, error });
   }
 }
 
@@ -269,7 +269,7 @@ function handleMcpEnvelope(connection: McpConnection, envelope: Envelope) {
 function attachSocket(connection: McpConnection) {
   const decoder = new EnvelopeStreamDecoder(
     (envelope) => handleMcpEnvelope(connection, envelope),
-    (error) => log.error("Failed to parse MCP message", error),
+    (error) => log?.error?.("Failed to parse MCP message", error),
   );
 
   connection.socket.on("data", (chunk) => decoder.push(chunk));
@@ -291,18 +291,18 @@ function createSocketServer() {
     connectionsBySocket.set(socket, connection);
     attachSocket(connection);
     ensureSocketCleanup(socket);
-    log.info("MCP connected", { remote: socket.remoteAddress });
+    log?.info?.("MCP connected", { remote: socket.remoteAddress });
   });
 
   server.on("error", (error) => {
-    log.error("Adapter server error", error);
+    log?.error?.("Adapter server error", error);
   });
 
   server.listen(socketPath, () => {
     if (process.platform !== "win32") {
       fs.chmodSync(socketPath, 0o600);
     }
-    log.info("Adapter listening", { socketPath });
+    log?.info?.("Adapter listening", { socketPath });
   });
 }
 
@@ -358,7 +358,7 @@ function handleExtensionEnvelope(envelope: Envelope) {
     case "REGISTER":
     case "HEARTBEAT":
     case "EVENT":
-      log.debug("Extension envelope", envelope);
+      log?.debug?.("Extension envelope", envelope);
       break;
   }
 }
@@ -367,15 +367,15 @@ function setupNativeMessaging() {
   try {
     process.stdin.resume();
     process.stdin.on("error", (error) => {
-      log.error("Native messaging stdin error", error);
+      log?.error?.("Native messaging stdin error", error);
     });
     process.stdout.on("error", (error) => {
-      log.error("Native messaging stdout error", error);
+      log?.error?.("Native messaging stdout error", error);
     });
 
     const reader = new NativeMessageReader(
       (envelope) => handleExtensionEnvelope(envelope),
-      (error) => log.error("Failed to parse native message", error),
+      (error) => log?.error?.("Failed to parse native message", error),
     );
 
     process.stdin.on("data", (chunk: Buffer) => {
@@ -384,10 +384,10 @@ function setupNativeMessaging() {
 
     process.stdin.on("close", () => {
       extensionConnected = false;
-      log.info("Extension disconnected");
+      log?.info?.("Extension disconnected");
     });
   } catch (error) {
-    log.error("Failed to initialize native messaging", error);
+    log?.error?.("Failed to initialize native messaging", error);
   }
 }
 

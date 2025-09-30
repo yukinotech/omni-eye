@@ -1,5 +1,5 @@
 {
-  "name": "mcp-bundle",
+  "name": "@omni-eye/mcp-bundle",
   "version": "0.1.0",
   "description": "MCP Native Messaging adapter, core protocol utilities, and server SDK.",
   "private": false,
@@ -7,8 +7,7 @@
   "config": {
     "extensionId": "mdeeiialcgmjlcokkpeeghinjpdcehja"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cli/index.js",
   "bin": {
     "mcp-adapter": "./bin/mcp-adapter.js"
   },

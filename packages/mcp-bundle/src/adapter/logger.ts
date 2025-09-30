@@ -7,7 +7,7 @@ const levelWeights = {
   error: 0,
   warn: 1,
   info: 2,
-  debug: 3
+  debug: 3,
 } as const;
 
 export type LogLevel = keyof typeof levelWeights;
@@ -29,8 +29,8 @@ function resolveLogFilePath(rawPath: string | undefined): string | undefined {
       trimmed === "~"
         ? homedir()
         : trimmed.startsWith("~/")
-        ? join(homedir(), trimmed.slice(2))
-        : trimmed;
+          ? join(homedir(), trimmed.slice(2))
+          : trimmed;
     return resolve(expanded);
   }
 
@@ -85,7 +85,7 @@ function emit(
   method: ConsoleMethod,
   prefix: string,
   message: unknown,
-  args: unknown[]
+  args: unknown[],
 ) {
   if (!shouldLog(level)) {
     return;
@@ -103,13 +103,13 @@ export function createLogger(prefix: string) {
       emit("error", "error", prefix, message, args);
     },
     warn(message: unknown, ...args: unknown[]) {
-      emit("warn", "warn", prefix, message, args);
+      emit("warn", "error", prefix, message, args);
     },
     info(message: unknown, ...args: unknown[]) {
-      emit("info", "log", prefix, message, args);
+      emit("info", "error", prefix, message, args);
     },
     debug(message: unknown, ...args: unknown[]) {
-      emit("debug", "debug", prefix, message, args);
-    }
+      emit("debug", "error", prefix, message, args);
+    },
   };
 }
