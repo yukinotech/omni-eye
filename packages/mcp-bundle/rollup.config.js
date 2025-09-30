@@ -7,6 +7,7 @@ export default [
       "scripts/registerNativeHost": "src/scripts/registerNativeHost.ts",
       "scripts/unregisterNativeHost": "src/scripts/unregisterNativeHost.ts",
       "cli/index": "src/cli/index.ts",
+      "mcp-server/index": "src/mcp-server/index.ts",
     },
     output: {
       dir: "dist",

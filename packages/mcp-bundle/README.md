@@ -3,6 +3,7 @@
 `mcp-bundle` packages everything required to bridge Model Context Protocol (MCP) servers with the Omni Eye Chrome extension through Chrome Native Messaging. It includes:
 
 - The native messaging adapter executable (`bin/mcp-adapter.js`).
+- A standalone MCP server entry (`bin/mcp-server.js`) that bridges stdin/stdout clients to the adapter over IPC.
 - Shared protocol types/constants (`src/mcp-core`).
 - An MCP server SDK (`src/server-sdk`) with a reconnecting `McpClient` and framing helpers.
 - Installation scripts that register/unregister the native messaging manifest across macOS, Linux, and Windows.
@@ -49,6 +50,23 @@ client.sendRequest("request-1", "dom.query", { selector: "h1" });
 ```
 
 The adapter listens on the path returned by `adapterSocketPath()`: `/tmp/mcp-adapter.sock` on POSIX systems or `\\.\pipe\mcp-adapter` on Windows.
+
+### Bundled MCP server
+
+The package also ships a ready-to-run MCP server that talks to Codex-style tools over STDIN/STDOUT while relaying capability requests through the IPC adapter. After building, it can be executed directly:
+
+```bash
+pnpm --filter mcp-bundle exec node dist/mcp-server/index.js
+```
+
+Or, once the package is linked globally:
+
+```bash
+mcp-server
+```
+
+The server currently exposes the DOM capabilities (`dom.diff`, `dom.query`) and forwards each request to the Chrome extension via the adapter socket.
+
 
 ## CLI
 
