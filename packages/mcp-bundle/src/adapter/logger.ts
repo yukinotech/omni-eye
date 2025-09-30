@@ -1,3 +1,8 @@
+import { createWriteStream, mkdirSync } from "fs";
+import type { WriteStream } from "fs";
+import { dirname, join, resolve } from "path";
+import { homedir } from "os";
+
 const levelWeights = {
   error: 0,
   warn: 1,
@@ -16,6 +21,43 @@ function resolveLevel(): LogLevel {
 }
 
 const currentLevel = resolveLevel();
+
+function resolveLogFilePath(rawPath: string | undefined): string | undefined {
+  const trimmed = rawPath?.trim();
+  if (trimmed) {
+    const expanded =
+      trimmed === "~"
+        ? homedir()
+        : trimmed.startsWith("~/")
+        ? join(homedir(), trimmed.slice(2))
+        : trimmed;
+    return resolve(expanded);
+  }
+
+  if (process.platform === "darwin") {
+    return resolve(homedir(), ".omni-eye", "mcp-adapter.log");
+  }
+
+  return undefined;
+}
+
+const logFilePath = resolveLogFilePath(process.env.MCP_ADAPTER_LOG_FILE);
+let logStream: WriteStream | undefined;
+
+if (logFilePath) {
+  try {
+    mkdirSync(dirname(logFilePath), { recursive: true });
+    logStream = createWriteStream(logFilePath, { flags: "a" });
+    logStream.on("error", (error) => {
+      console.warn(`[logger] Failed to write logs to ${logFilePath}:`, error);
+      logStream?.close();
+      logStream = undefined;
+    });
+  } catch (error) {
+    console.warn(`[logger] Failed to initialize log file ${logFilePath}:`, error);
+    logStream = undefined;
+  }
+}
 
 function shouldLog(level: LogLevel): boolean {
   return levelWeights[level] <= levelWeights[currentLevel];
@@ -36,27 +78,38 @@ function format(prefix: string, level: LogLevel, message: unknown, args: unknown
   return `[${ts}] [${level.toUpperCase()}] [${prefix}] ${payload}`;
 }
 
+type ConsoleMethod = "error" | "warn" | "log" | "debug";
+
+function emit(
+  level: LogLevel,
+  method: ConsoleMethod,
+  prefix: string,
+  message: unknown,
+  args: unknown[]
+) {
+  if (!shouldLog(level)) {
+    return;
+  }
+  const line = format(prefix, level, message, args);
+  console[method](line);
+  if (logStream) {
+    logStream.write(`${line}\n`);
+  }
+}
+
 export function createLogger(prefix: string) {
   return {
     error(message: unknown, ...args: unknown[]) {
-      if (shouldLog("error")) {
-        console.error(format(prefix, "error", message, args));
-      }
+      emit("error", "error", prefix, message, args);
     },
     warn(message: unknown, ...args: unknown[]) {
-      if (shouldLog("warn")) {
-        console.warn(format(prefix, "warn", message, args));
-      }
+      emit("warn", "warn", prefix, message, args);
     },
     info(message: unknown, ...args: unknown[]) {
-      if (shouldLog("info")) {
-        console.log(format(prefix, "info", message, args));
-      }
+      emit("info", "log", prefix, message, args);
     },
     debug(message: unknown, ...args: unknown[]) {
-      if (shouldLog("debug")) {
-        console.debug(format(prefix, "debug", message, args));
-      }
+      emit("debug", "debug", prefix, message, args);
     }
   };
 }

@@ -2,7 +2,15 @@ import fs from "fs";
 import net from "net";
 import path from "path";
 import { randomUUID } from "crypto";
-import { Envelope, RequestEnvelope, ResponseEnvelope, ErrorEnvelope, RegisterEnvelope, HeartbeatEnvelope, EventEnvelope } from "../mcp-core";
+import {
+  Envelope,
+  RequestEnvelope,
+  ResponseEnvelope,
+  ErrorEnvelope,
+  RegisterEnvelope,
+  HeartbeatEnvelope,
+  EventEnvelope,
+} from "../mcp-core/index";
 import { buildError, ErrorCode } from "../mcp-core/errors";
 import { createLogger } from "./logger";
 import { NativeMessageReader, writeNativeMessage } from "./nativeIo";
@@ -10,6 +18,8 @@ import { encodeEnvelope, EnvelopeStreamDecoder } from "../server-sdk/framing";
 import { adapterSocketPath } from "../server-sdk/socketName";
 
 const log = createLogger("adapter");
+
+log.info("Adapter script loaded");
 
 interface McpConnection {
   socket: net.Socket;
@@ -95,8 +105,8 @@ function handleRegister(connection: McpConnection, envelope: RegisterEnvelope) {
       kind: "server-registered",
       serverId,
       caps,
-      version
-    }
+      version,
+    },
   });
 }
 
@@ -110,8 +120,8 @@ function handleHeartbeat(connection: McpConnection, envelope: HeartbeatEnvelope)
       kind: "server-heartbeat",
       serverId: connection.serverId,
       load: envelope.payload.load,
-      ts: connection.lastHeartbeat
-    }
+      ts: connection.lastHeartbeat,
+    },
   });
 }
 
@@ -154,18 +164,23 @@ function sendErrorToExtension(id: string | undefined, code: ErrorCode, message: 
     type: "ERROR",
     source: "adapter",
     target: "extension",
-    error: buildError(code, message)
+    error: buildError(code, message),
   };
   sendToExtension(envelope);
 }
 
-function sendErrorToMcp(socket: net.Socket, id: string | undefined, code: ErrorCode, message: string) {
+function sendErrorToMcp(
+  socket: net.Socket,
+  id: string | undefined,
+  code: ErrorCode,
+  message: string,
+) {
   const envelope: ErrorEnvelope = {
     id,
     type: "ERROR",
     source: "adapter",
     target: "mcp",
-    error: buildError(code, message)
+    error: buildError(code, message),
   };
   socket.write(encodeEnvelope(envelope));
 }
@@ -200,7 +215,12 @@ function resolvePending(id: string | undefined): PendingEntry | undefined {
 
 function handleMcpRequest(connection: McpConnection, envelope: RequestEnvelope) {
   if (!extensionConnected) {
-    sendErrorToMcp(connection.socket, envelope.id, "browser_unavailable", "Browser extension is not connected");
+    sendErrorToMcp(
+      connection.socket,
+      envelope.id,
+      "browser_unavailable",
+      "Browser extension is not connected",
+    );
     return;
   }
   const forward: Envelope = {
@@ -210,8 +230,8 @@ function handleMcpRequest(connection: McpConnection, envelope: RequestEnvelope) 
     meta: {
       ...(envelope.meta ?? {}),
       serverId: connection.serverId ?? undefined,
-      ts: Date.now()
-    }
+      ts: Date.now(),
+    },
   };
   registerPending(envelope.id, { origin: "mcp", socket: connection.socket });
   sendToExtension(forward);
@@ -235,7 +255,7 @@ function handleMcpEnvelope(connection: McpConnection, envelope: Envelope) {
         sendToExtension({
           ...envelope,
           source: "adapter",
-          target: "extension"
+          target: "extension",
         });
       }
       break;
@@ -249,7 +269,7 @@ function handleMcpEnvelope(connection: McpConnection, envelope: Envelope) {
 function attachSocket(connection: McpConnection) {
   const decoder = new EnvelopeStreamDecoder(
     (envelope) => handleMcpEnvelope(connection, envelope),
-    (error) => log.error("Failed to parse MCP message", error)
+    (error) => log.error("Failed to parse MCP message", error),
   );
 
   connection.socket.on("data", (chunk) => decoder.push(chunk));
@@ -266,7 +286,7 @@ function createSocketServer() {
       socket,
       serverId: null,
       caps: new Set(),
-      lastHeartbeat: Date.now()
+      lastHeartbeat: Date.now(),
     };
     connectionsBySocket.set(socket, connection);
     attachSocket(connection);
@@ -290,7 +310,11 @@ function handleExtensionRequest(envelope: RequestEnvelope) {
   const targetServerId = envelope.meta?.serverId;
   const connection = pickMcpByCap(envelope.cap, targetServerId);
   if (!connection) {
-    sendErrorToExtension(envelope.id, "mcp_unavailable", `No MCP server available for capability ${envelope.cap}`);
+    sendErrorToExtension(
+      envelope.id,
+      "mcp_unavailable",
+      `No MCP server available for capability ${envelope.cap}`,
+    );
     return;
   }
 
@@ -303,8 +327,8 @@ function handleExtensionRequest(envelope: RequestEnvelope) {
     meta: {
       ...(envelope.meta ?? {}),
       serverId: connection.serverId ?? undefined,
-      ts: Date.now()
-    }
+      ts: Date.now(),
+    },
   };
 
   registerPending(id, { origin: "extension" });
@@ -325,8 +349,8 @@ function handleExtensionEnvelope(envelope: Envelope) {
           encodeEnvelope({
             ...envelope,
             source: "adapter",
-            target: "mcp"
-          })
+            target: "mcp",
+          }),
         );
       }
       break;
@@ -351,7 +375,7 @@ function setupNativeMessaging() {
 
     const reader = new NativeMessageReader(
       (envelope) => handleExtensionEnvelope(envelope),
-      (error) => log.error("Failed to parse native message", error)
+      (error) => log.error("Failed to parse native message", error),
     );
 
     process.stdin.on("data", (chunk: Buffer) => {
