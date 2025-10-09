@@ -51,7 +51,7 @@ function createhttpServer() {
     writeNativeMessage(process.stdout, { ...request?.body });
     const data = await getNativeResData(reqId);
     log?.info?.("getNativeResData", data);
-    reply.send({ hello: "world" });
+    reply.send(data);
   });
 
   // Run the server!

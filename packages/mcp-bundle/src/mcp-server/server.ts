@@ -71,7 +71,14 @@ function registerTools(server: McpServer, client: AxiosInstance) {
         log.info("尝试调用reqid:", reqId);
         const response = await client.post("/api/common", { cap, payload, reqId });
         log.info("尝试调用结果:", response.data);
-        return response;
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(response.data, null, 2),
+            },
+          ],
+        };
       } catch (error) {
         return error;
       }
