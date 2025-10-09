@@ -1,3 +1,4 @@
-1. 用@modelcontextprotocol/sdk实现packages/mcp-bundle/src/mcp-server/index.ts
-2. mcp-server目标是被codex或者cursor的AI工具调用
-3. mcp-server被调用后，会通过IPC和adapter通信，这部分的代码在server sdk和mcp-core里有参考
+packages/mcp-bundle/src/mcp-server/index.ts,这个文件包含2个部分
+1. mcp server的相关内容
+2. AdapterClient的相关内容
+在保证现有逻辑不变的情况下，把这两个部分拆开，不要写在index.ts一个文件里面，但都放到packages/mcp-bundle/src/mcp-server/目录下。
