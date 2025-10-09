@@ -34,8 +34,8 @@ export class NativeMessageReader {
   }
 }
 
-export function writeNativeMessage(stream: NodeJS.WritableStream, envelope: Envelope) {
-  const payload = Buffer.from(JSON.stringify(envelope), "utf8");
+export function writeNativeMessage(stream: NodeJS.WritableStream, data: Record<string, any>) {
+  const payload = Buffer.from(JSON.stringify(data), "utf8");
   const header = Buffer.alloc(HEADER_BYTES);
   header.writeUInt32LE(payload.length, 0);
   stream.write(Buffer.concat([header, payload]));

@@ -27,20 +27,21 @@ function handleDomDiff() {
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (!isEnvelope(message) || message.type !== "REQUEST") {
-    return false;
-  }
+  console.error("message", message);
+  // if (!isEnvelope(message) || message.type !== "REQUEST") {
+  //   return false;
+  // }
 
-  const envelope = message as RequestEnvelope;
+  const envelope = message;
 
   try {
     switch (envelope.cap) {
-      case "dom.query": {
+      case "dom_query": {
         const result = handleDomQuery(envelope.payload as DomQueryPayload);
         sendResponse(result);
         break;
       }
-      case "dom.diff": {
+      case "dom_diff": {
         const result = handleDomDiff();
         sendResponse(result);
         break;
