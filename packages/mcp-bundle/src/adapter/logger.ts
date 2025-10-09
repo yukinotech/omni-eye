@@ -64,7 +64,7 @@ function shouldLog(level: LogLevel): boolean {
 }
 
 function format(prefix: string, level: LogLevel, message: unknown, args: unknown[]): string {
-  const ts = new Date().toISOString();
+  const ts = new Date().toISOString()
   const payload = [message, ...args]
     .map((item) => {
       if (typeof item === "string") return item;

@@ -17,7 +17,7 @@ import { NativeMessageReader, writeNativeMessage } from "./nativeIo";
 import { encodeEnvelope, EnvelopeStreamDecoder } from "../server-sdk/framing";
 import { adapterSocketPath } from "../server-sdk/socketName";
 
-const log = createLogger("adapter");
+const log = createLogger("Adapter");
 
 log?.debug?.("Adapter script loaded");
 
@@ -291,7 +291,10 @@ function createSocketServer() {
     connectionsBySocket.set(socket, connection);
     attachSocket(connection);
     ensureSocketCleanup(socket);
-    log?.info?.("MCP connected", { remote: socket.remoteAddress });
+  });
+
+  server.on("connection", (socket) => {
+    log?.info?.("MCP connected new", { remote: socket.remoteAddress });
   });
 
   server.on("error", (error) => {

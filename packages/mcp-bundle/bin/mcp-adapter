@@ -14,8 +14,6 @@ function load() {
 const mod = load();
 if (mod && typeof mod.start === "function") {
   mod.start();
-} else if (mod && mod.startAdapter) {
-  mod.startAdapter();
 } else {
   console.error("[mcp-bundle] Failed to locate adapter start function.");
   process.exit(1);

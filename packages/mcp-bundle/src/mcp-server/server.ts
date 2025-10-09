@@ -6,10 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { ZodRawShape } from "zod";
 
 import { createLogger } from "../adapter/logger";
-import {
-  type EventEnvelope,
-  type ResponseEnvelope,
-} from "../mcp-core/envelope";
+import { type EventEnvelope, type ResponseEnvelope } from "../mcp-core/envelope";
 
 import { AdapterClient, AdapterClientError } from "./adapterClient";
 
@@ -39,14 +36,14 @@ const TOOL_DEFINITIONS: Record<
     inputSchema: Record<string, unknown>;
   }
 > = {
-  "dom.query": {
+  dom_query: {
     description: "Query DOM information from the Omni Eye browser extension.",
     inputSchema: {
       type: "object",
       additionalProperties: true,
     },
   },
-  "dom.diff": {
+  dom_diff: {
     description: "Compute DOM diffs using the Omni Eye browser extension.",
     inputSchema: {
       type: "object",
@@ -75,6 +72,7 @@ function resolveVersion(): string {
 }
 
 function toToolSuccess(envelope: ResponseEnvelope): ToolResult {
+  log.info("toToolSuccess", envelope);
   const payload = envelope.payload ?? null;
   const meta = envelope.meta ? { ...envelope.meta } : undefined;
   const data = meta ? { payload, meta } : payload;
@@ -89,6 +87,7 @@ function toToolSuccess(envelope: ResponseEnvelope): ToolResult {
 }
 
 function toToolError(error: unknown): ToolResult {
+  log.error("toToolError", error);
   if (error instanceof AdapterClientError) {
     return {
       isError: true,
@@ -130,29 +129,26 @@ function toToolError(error: unknown): ToolResult {
 }
 
 function determineToolRegistrar(server: McpServer) {
-  if (typeof server.registerTool === "function") {
-    return (name: string, definition: ToolDefinition, handler: ToolCallback<ZodRawShape>) => {
-      server.registerTool(
-        name,
-        {
-          description: definition.description,
-          inputSchema: definition.inputSchema as ZodRawShape,
-        },
-        handler,
-      );
-    };
-  }
-
-  throw new Error("Unsupported MCP server implementation: cannot register tools");
+  return (name: string, definition: ToolDefinition, handler: ToolCallback<ZodRawShape>) => {
+    server.registerTool(
+      name,
+      {
+        description: definition.description,
+        inputSchema: definition.inputSchema as ZodRawShape,
+      },
+      handler,
+    );
+  };
 }
 
-function registerTools(server: any, client: AdapterClient) {
+function registerTools(server: McpServer, client: AdapterClient) {
   const register = determineToolRegistrar(server);
 
   for (const [cap, definition] of Object.entries(TOOL_DEFINITIONS)) {
-    const handler = async (input: unknown): Promise<ToolResult> => {
+    const handler: any = async (input: any) => {
       try {
         const response = await client.sendRequest(cap, input);
+        log.info("response");
         return toToolSuccess(response);
       } catch (error) {
         return toToolError(error);
@@ -173,25 +169,13 @@ function createServer(client: AdapterClient) {
   return server;
 }
 
-function sendServerNotification(server: any, method: string, params: unknown) {
-  if (typeof server.sendNotification === "function") {
-    server.sendNotification(method, params);
-    return;
-  }
-  if (typeof server.notify === "function") {
-    server.notify(method, params);
-    return;
-  }
-  if (typeof server.notification === "function") {
-    server.notification(method, params);
-    return;
-  }
+function sendServerNotification(server: McpServer, method: string, params: unknown) {
   log?.debug?.("Server instance does not expose a notification API", {
     method,
   });
 }
 
-function attachAdapterListeners(server: any, client: AdapterClient) {
+function attachAdapterListeners(server: McpServer, client: AdapterClient) {
   client.on("connected", () => {
     sendServerNotification(server, "omni.eye/adapter_status", {
       status: "connected",
@@ -212,14 +196,6 @@ function attachAdapterListeners(server: any, client: AdapterClient) {
   client.on("error", (error: Error) => {
     log?.warn?.("Adapter client error", error);
   });
-}
-
-async function listenOnTransport(server: any, transport: StdioServerTransport) {
-  if (typeof server.connect === "function") {
-    await server.connect(transport);
-    return;
-  }
-  throw new Error("Unsupported MCP server implementation: cannot start transport");
 }
 
 let shuttingDown = false;
@@ -250,6 +226,7 @@ function setupProcessHandlers(client: AdapterClient) {
 }
 
 export async function start() {
+  log.info("init");
   const client = new AdapterClient({
     serverId: SERVER_ID,
     caps: Object.keys(TOOL_DEFINITIONS),
@@ -269,7 +246,7 @@ export async function start() {
 
   const transport = new StdioServerTransport();
   try {
-    await listenOnTransport(server, transport);
+    await server.connect(transport);
   } catch (error) {
     await shutdown(client);
     throw error;

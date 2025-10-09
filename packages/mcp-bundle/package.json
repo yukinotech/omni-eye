@@ -8,11 +8,11 @@
     "extensionId": "mdeeiialcgmjlcokkpeeghinjpdcehja"
   },
   "bin": {
-    "mcp-adapter": "./bin/mcp-adapter.js",
-    "@omni-eye/mcp-bundle": "./dist/mcp-server/index.js"
+    "mcp-adapter": "./bin/mcp-adapter",
+    "mcp-bundle": "./dist/mcp-server/index.js"
   },
   "scripts": {
-    "build": "rimraf dist && tsc --project tsconfig.json",
+    "build": "rimraf dist && tsc --project tsconfig.json && node ./src/scripts/add-shabang.js",
     "mcp": "npm run build && node ./dist/mcp-server/index.js",
     "register-native-host": "TEST=true node ./scripts/register-native-host.js",
     "unregister-native-host": "TEST=true node ./scripts/unregister-native-host.js",
