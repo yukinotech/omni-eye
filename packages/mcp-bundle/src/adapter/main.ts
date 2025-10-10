@@ -1,3 +1,4 @@
+import type { Req } from "../type/req";
 import { createLogger } from "./logger";
 import { NativeMessageReader, writeNativeMessage } from "./nativeIo";
 import Fastify, { FastifyInstance } from "fastify";
@@ -10,8 +11,8 @@ const dataMap: Record<string, any> = {};
 
 let fastify: FastifyInstance = undefined as any;
 
-const handleExtensionEnvelope = (data: any) => {
-  log?.info?.("handleExtensionEnvelope", data);
+const handleDataFromExtension = (data: Req) => {
+  log?.info?.("handleDataFromExtension", data);
   const reqId = data?.reqId;
   dataMap[reqId] = data;
 };
@@ -75,7 +76,7 @@ function setupNativeMessaging() {
     });
 
     const reader = new NativeMessageReader(
-      (data) => handleExtensionEnvelope(data),
+      (data) => handleDataFromExtension(data),
       (error) => log?.error?.("Failed to parse native message", error),
     );
 

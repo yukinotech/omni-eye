@@ -6,6 +6,9 @@ import { z, ZodRawShape } from "zod";
 import axios, { AxiosInstance } from "axios";
 import { randomUUID } from "crypto";
 import { createLogger } from "../adapter/logger";
+import { Req } from "../type/req";
+// @ts-ignore
+import unfluff from "unfluff";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:2231",
@@ -13,16 +16,19 @@ const axiosClient = axios.create({
 
 export const log = createLogger("Mcp Server");
 
-const TOOL_DEFINITIONS: Record<
-  string,
-  {
-    description: string;
-    // inputSchema: z.ZodAny;
-  }
-> = {
+const TOOL_DEFINITIONS: Record<string, any> = {
   dom_query: {
     description: "Query DOM information from the Omni Eye browser extension.",
-    // inputSchema: z.any(),
+    // parameters: {
+    //   type: "object",
+    //   properties: {
+    //     query: {
+    //       type: "string",
+    //       description: "搜索关键字",
+    //     },
+    //   },
+    //   required: ["query"],
+    // },
   },
   dom_diff: {
     description: "Compute DOM diffs using the Omni Eye browser extension.",
@@ -53,7 +59,7 @@ function determineToolRegistrar(server: McpServer) {
     server.registerTool(
       name,
       {
-        description: definition.description,
+        ...definition,
       },
       handler,
     );
@@ -69,8 +75,9 @@ function registerTools(server: McpServer, client: AxiosInstance) {
         const reqId = crypto.randomUUID();
         log.info("尝试调用:", cap, payload);
         log.info("尝试调用reqid:", reqId);
-        const response = await client.post("/api/common", { cap, payload, reqId });
+        const response = await client.post("/api/common", { cap, payload, reqId } as Req);
         log.info("尝试调用结果:", response.data);
+        // const result = unfluff(response.data?.tabData?.html, "zh"); // 指定语言有助于分词
         return {
           content: [
             {

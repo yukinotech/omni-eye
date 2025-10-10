@@ -1,8 +1,9 @@
 import type { Envelope } from "../mcp-core/envelope.js";
+import type { Req } from "../type/req";
 
 const HEADER_BYTES = 4;
 
-export type NativeMessageHandler = (envelope: Envelope) => void;
+export type NativeMessageHandler = (envelope: Req) => void;
 export type NativeMessageErrorHandler = (error: Error) => void;
 
 export class NativeMessageReader {
@@ -26,7 +27,7 @@ export class NativeMessageReader {
       this.buffer = this.buffer.slice(HEADER_BYTES + length);
       try {
         const parsed = JSON.parse(body.toString("utf8"));
-        this.handler(parsed as Envelope);
+        this.handler(parsed as Req);
       } catch (error) {
         this.errorHandler(error as Error);
       }
