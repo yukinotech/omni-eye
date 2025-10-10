@@ -75,12 +75,14 @@ async function relayRequestToContent(data: Req) {
 
   if (data?.cap === "dom_query") {
     const tabData = await getTabData();
-    console.log("tabData", tabData);
+    log("tabData", tabData);
     sendToAdapter({ result: "dom_query命中", status: "success", reqId: data.reqId, tabData });
     return;
   }
   if (data?.cap === "dom_click") {
-    sendToAdapter({ result: "dom_click命中", status: "success", reqId: data.reqId });
+    log("data cap", "dom_click");
+    const res = await domClick(data?.payload?.selector || "");
+    sendToAdapter({ result: "dom_click命中", status: res ? "success" : "fail", reqId: data.reqId });
     return;
   }
 }
@@ -88,7 +90,7 @@ async function relayRequestToContent(data: Req) {
 function getTabData() {
   return new Promise<{ html: string; title: string; location: string } | null>((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      console.log("tabs", tabs);
+      log("tabs", tabs);
       if (chrome.runtime.lastError) {
         log("Failed to query active tab", chrome.runtime.lastError.message);
         resolve(null);
@@ -141,8 +143,70 @@ function getTabData() {
   });
 }
 
-function domClick() {
-  
+function domClick(selector: string) {
+  log("call domClick");
+  return new Promise<boolean>((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        log("Failed to query active tab before DOM click", chrome.runtime.lastError.message);
+        resolve(false);
+        return;
+      }
+
+      const activeTab = tabs[0];
+      if (!activeTab?.id) {
+        log("No active tab found for DOM click");
+        resolve(false);
+        return;
+      }
+
+      log("executeScript");
+
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: activeTab.id },
+          args: [selector],
+          func: (querySelector: string) => {
+            console.log("dom click querySelector", querySelector);
+            const target = Array.from(document.querySelectorAll(querySelector))?.[0];
+            console.log("dom click", target);
+            if (!target) {
+              return { success: false, reason: "not_found" };
+            }
+
+            if (target instanceof HTMLElement) {
+              target.click();
+            } else {
+              target.dispatchEvent(
+                new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
+              );
+            }
+
+            return { success: true };
+          },
+        },
+        (results) => {
+          log("domClick executeScript results", results);
+          const lastError = chrome.runtime.lastError;
+          if (lastError) {
+            log("Failed to execute DOM click script", lastError.message);
+            resolve(false);
+            return;
+          }
+
+          const [injectionResult] = results ?? [];
+          if (!injectionResult) {
+            log("DOM click script returned no results", activeTab.id);
+            resolve(false);
+            return;
+          }
+
+          const { success } = (injectionResult.result ?? {}) as { success?: boolean };
+          resolve(Boolean(success));
+        },
+      );
+    });
+  });
 }
 
 // function dispatchToTab(tabId: number, envelope: RequestEnvelope) {

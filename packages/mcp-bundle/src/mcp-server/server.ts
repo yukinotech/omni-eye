@@ -16,28 +16,6 @@ const axiosClient = axios.create({
 
 export const log = createLogger("Mcp Server");
 
-const TOOL_DEFINITIONS: Record<string, any> = {
-  dom_query: {
-    description: "Query DOM information from the Omni Eye browser extension.",
-    // parameters: {
-    //   type: "object",
-    //   properties: {
-    //     query: {
-    //       type: "string",
-    //       description: "搜索关键字",
-    //     },
-    //   },
-    //   required: ["query"],
-    // },
-  },
-  dom_diff: {
-    description: "Compute DOM diffs using the Omni Eye browser extension.",
-    // inputSchema: z.any(),
-  },
-};
-
-type ToolDefinition = (typeof TOOL_DEFINITIONS)[string];
-
 const SERVER_VERSION = resolveVersion();
 
 function resolveVersion(): string {
@@ -54,45 +32,48 @@ function resolveVersion(): string {
   return "0.0.0";
 }
 
-function determineToolRegistrar(server: McpServer) {
-  return (name: string, definition: ToolDefinition, handler: ToolCallback<ZodRawShape>) => {
-    server.registerTool(
-      name,
-      {
-        ...definition,
-      },
-      handler,
-    );
-  };
-}
-
 function registerTools(server: McpServer, client: AxiosInstance) {
-  const register = determineToolRegistrar(server);
+  const handler: any = async (cap: string, payload?: any) => {
+    try {
+      const reqId = crypto.randomUUID();
+      log.info("尝试调用:", cap, payload);
+      log.info("尝试调用reqid:", reqId);
+      const response = await client.post("/api/common", { cap, payload, reqId } as Req);
+      log.info("尝试调用结果:", response.data);
+      // const result = unfluff(response.data?.tabData?.html, "zh"); // 指定语言有助于分词
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(response.data, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return error;
+    }
+  };
 
-  for (const [cap, definition] of Object.entries(TOOL_DEFINITIONS)) {
-    const handler: any = async (payload: any) => {
-      try {
-        const reqId = crypto.randomUUID();
-        log.info("尝试调用:", cap, payload);
-        log.info("尝试调用reqid:", reqId);
-        const response = await client.post("/api/common", { cap, payload, reqId } as Req);
-        log.info("尝试调用结果:", response.data);
-        // const result = unfluff(response.data?.tabData?.html, "zh"); // 指定语言有助于分词
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(response.data, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        return error;
-      }
-    };
-
-    register(cap, definition, handler);
-  }
+  server.registerTool(
+    "dom_query",
+    {
+      description: "查询页面信息",
+    },
+    (args, extra) => handler("dom_query"),
+  );
+  server.registerTool(
+    "dom_click",
+    {
+      description: "点击dom元素",
+      inputSchema: {
+        selector: z.string().min(1).describe("CSS 选择器（如：.btn.primary 或 #submit）"),
+      },
+    },
+    (args, extra) => {
+      log.info("dom_click", args);
+      return handler("dom_click", args);
+    },
+  );
 }
 
 function createServer() {
